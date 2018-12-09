@@ -1,12 +1,25 @@
 enum Q {
-    q0,
-    q2,
-    q3
+    RECORDING_START_OF_WORD,
+    READ_ZERO,
+    CONFIRMING_END_OF_WORD,
+    IS_PALINDROME,
+    SINK,
 }
 
 enum Sigma {
-    a,
-    b
+    a("a"),
+    b("b"),
+    ZERO("0");
+
+    private String value;
+
+    public String getValue() {
+        return this.value;
+    }
+
+    Sigma(String action) {
+        this.value = action;
+    }
 }
 
 enum Gamma {
@@ -15,11 +28,11 @@ enum Gamma {
     BOTTOM
 }
 
-public class PalindromeDetector extends DeterministicPushDownAutomata<Q, Sigma, Gamma> {
+public class PalindromeDetector extends DeterministicPushDownAutomaton<Q, Sigma, Gamma> {
 
     @Override
     Q getInitialState() {
-        return Q.q0;
+        return Q.RECORDING_START_OF_WORD;
     }
 
     @Override
@@ -29,56 +42,46 @@ public class PalindromeDetector extends DeterministicPushDownAutomata<Q, Sigma, 
 
     @Override
     boolean isValidEndState(Q s) {
-        return s == Q.q3;
+        return s == Q.IS_PALINDROME;
     }
 
     @Override
     Transition<Q, Gamma> nextState(Q currentState, Gamma stackTop, Sigma input) {
+        if (input == null) {
+            boolean isValidPalindrome = currentState == Q.CONFIRMING_END_OF_WORD && stackTop == Gamma.BOTTOM;
+            return isValidPalindrome
+                ? new Transition<Q, Gamma>(Q.IS_PALINDROME, stackTop)
+                : new Transition<Q, Gamma>(Q.SINK, stackTop);
+        }
+
         switch (currentState) {
-            case q0:
+            case RECORDING_START_OF_WORD:
+                switch (input) {
+                    case ZERO:
+                        return new Transition<Q, Gamma>(Q.READ_ZERO, stackTop);
+                    case a:
+                        return new Transition<Q, Gamma>(Q.RECORDING_START_OF_WORD, stackTop, Gamma.A);
+                    case b:
+                        return new Transition<Q, Gamma>(Q.RECORDING_START_OF_WORD, stackTop, Gamma.B);
+                }
+            case READ_ZERO:
+            case CONFIRMING_END_OF_WORD:
                 switch (input) {
                     case a:
-                        switch (stackTop) {
-                            case A:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.A, Gamma.A);
-                            case B:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.A, Gamma.B);
-                            case BOTTOM:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.A, Gamma.BOTTOM);
-                        }
+                        return stackTop == Gamma.A
+                          ? new Transition<Q, Gamma>(Q.CONFIRMING_END_OF_WORD)
+                          : new Transition<Q, Gamma>(Q.SINK, stackTop);
                     case b:
-                        switch (stackTop) {
-                            case A:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.B, Gamma.A);
-                            case B:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.B, Gamma.B);
-                            case BOTTOM:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.B, Gamma.BOTTOM);
-
-                        }
+                        return stackTop == Gamma.B
+                          ? new Transition<Q, Gamma>(Q.CONFIRMING_END_OF_WORD)
+                          : new Transition<Q, Gamma>(Q.SINK, stackTop);
+                    case ZERO:
+                        return new Transition<Q, Gamma>(Q.SINK, stackTop);
                 }
-            case q2:
-                switch (input) {
-                    case a:
-                        switch (stackTop) {
-                            case A:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.A, Gamma.A);
-                            case B:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.A, Gamma.B);
-                            case BOTTOM:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.A, Gamma.BOTTOM);
-                        }
-                    case b:
-                        switch (stackTop) {
-                            case A:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.B, Gamma.A);
-                            case B:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.B, Gamma.B);
-                            case BOTTOM:
-                                return new Transition<Q, Gamma>(Q.q0, Gamma.B, Gamma.BOTTOM);
-
-                        }
-                }
+            case SINK:
+                return new Transition<Q, Gamma>(Q.SINK, stackTop);
+            default:
+                return null;
         }
     }
 

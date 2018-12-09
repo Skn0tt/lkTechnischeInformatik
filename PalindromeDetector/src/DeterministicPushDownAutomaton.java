@@ -1,6 +1,6 @@
 import java.util.Stack;
 
-public abstract class DeterministicPushDownAutomata<Q extends Enum<Q>, Sigma extends Enum<Sigma>, Gamma extends Enum<Gamma>> {
+public abstract class DeterministicPushDownAutomaton<Q extends Enum<Q>, Sigma extends Enum<Sigma>, Gamma extends Enum<Gamma>> {
 
     public boolean validate(Stack<Sigma> input) {
         final Stack<Gamma> stack = new Stack<>();
@@ -39,6 +39,11 @@ public abstract class DeterministicPushDownAutomata<Q extends Enum<Q>, Sigma ext
         final Q newState;
         final Gamma[] newStack;
 
+        /**
+         * Transition
+         * @param newState
+         * @param newStack from bottom to top
+         */
         public Transition(Q newState, Gamma... newStack) {
             this.newState = newState;
             this.newStack = newStack;
